@@ -116,7 +116,8 @@ After adjusting the hypothesys statements in the exploration data three insights
 # 7. Business Results
 
 It was generated a table containing only the homes recommended to buy together with their selling prices. New columns were created.
-<img src="none" style="zoom:100%;" />
+
+<img src="final-table-img.png" style="zoom:100%;" />
 
 [See entire table here in csv](table-selling-prices.csv)
 
