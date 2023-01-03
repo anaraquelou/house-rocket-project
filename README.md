@@ -7,7 +7,7 @@ In order to be competitive the company has to buy good houses for a lower price 
 
 Since the company is growing as well as its portfolio, the time to analyse the best opportunites has increased significantly. House Rocket has reached out a data science consultancy to built a tool to adress this issue. Thus, the main questions House Rocket want answered quickly bu this new tool are:
 
-  1. *What are the houses the company should by and for what price?*
+  1. *What are the houses the company should buy and for what price?*
   2. *What is the best moment do sell them and for what price?*
 
 ## 2. Business Assumptions
