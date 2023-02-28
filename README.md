@@ -87,7 +87,7 @@ Since the company is growing as well as its portfolio, the time to analyse the b
 ## 5. Exploration
 The data analysis was driven by a dashboard created in Heroku app. This page is available for the business team pursue their own analysis using personalize filters and creating other insights for the project.
 
-[Access House Rocket Dashboard here](https://analytics-house-rocket-raquel.herokuapp.com/)
+[Access House Rocket Dashboard here](https://house-rocket-project-x54t.onrender.com/)
 
 For the scope of the analysis 10 hypothesis were created and tested:
 | Hypothesis | Result | Expected | Real | Action |
