@@ -43,7 +43,10 @@ data['price_m2'] = data['price'] / data['sqft_lot']
 # -----------------------------
 
 # criar um filtro de coluna
-f_attributes = st.sidebar.multiselect( 'Enter columns', data.columns)
+f_attributes = st.sidebar.multiselect( 'Enter columns', ['price', 'bedrooms', 'bathrooms', 'sqft_living',
+       'sqft_lot', 'floors', 'waterfront', 'view', 'condition', 'grade',
+       'sqft_above', 'sqft_basement', 'yr_built', 'yr_renovated', 'zipcode',
+       'lat', 'long', 'sqft_living15', 'sqft_lot15', 'price_m2'] )
 
 # criar filtro da região
 f_zipcode = st.sidebar.multiselect( 'Enter zipcode', data['zipcode'].unique() )
@@ -53,43 +56,101 @@ st.title( 'Data Overview' )
 
 # attributes + zipcode = selecionar colunas e linhas
 if ( f_zipcode != [] ) & ( f_attributes != [] ):
-    data = data.loc[data['zipcode'].isin( f_zipcode) , f_attributes]
+    aux = data.loc[ data['zipcode'].isin( f_zipcode), ['id', 'zipcode'] + f_attributes ]
 
 # zipcode = selecionar linhas
 elif( ( f_zipcode != [] ) & ( f_attributes == [] ) ):
-    data = data.loc[data['zipcode'].isin( f_zipcode) , :]
+    aux = data.loc[ data['zipcode'].isin( f_zipcode), : ]
 
 # attributes = selecionar solunas
 elif ((f_zipcode == []) & (f_attributes != [])):
-    data = data.loc[:, f_attributes]
+    aux = data.loc[ :, ['id', 'zipcode'] + f_attributes ]
 
 # 0 + 0 = retornar dataset original
 else:
-    data = data.copy()
+    aux = data.copy()
 
-st.write( data.head() )
+st.write( aux.head(6) )
 
 # arrumando tamanho das colunas
 c1, c2 = st.columns((1, 1))
 
 # AVERAGE METRICS
-df1 = data[['id', 'zipcode']].groupby('zipcode').count().reset_index()
-df2 = data[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
-df3 = data[['sqft_living', 'zipcode']].groupby('zipcode').mean().reset_index()
-df4 = data[['price_m2', 'zipcode']].groupby('zipcode').mean().reset_index()
+if ('price' in aux.columns) & ('sqft_living' in aux.columns) & ('price_m2' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df2 = aux[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+    df3 = aux[['sqft_living', 'zipcode']].groupby('zipcode').mean().reset_index()
+    df4 = aux[['price_m2', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    m1 = pd.merge(df1, df2, on='zipcode', how='inner')
+    m2 = pd.merge(m1, df3, on='zipcode', how='inner')
+    df = pd.merge(m2, df4, on='zipcode', how='inner')
 
-# juntar tudo em uma tabela unica
-m1 = pd.merge( df1, df2, on='zipcode', how='inner' )
-m2 = pd.merge( m1, df3, on='zipcode', how='inner' )
-df = pd.merge( m2, df4, on='zipcode', how='inner' )
+elif ('price' not in aux.columns) & ('sqft_living' not in aux.columns) & ('price_m2' not in aux.columns):
+    df = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
 
-df.columns = ['zipcode', 'total houses', 'price', 'sqft living', 'price/m2']
+elif ('price' not in aux.columns) & ('sqft_living' in aux.columns) & ('price_m2' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df3 = aux[['sqft_living', 'zipcode']].groupby('zipcode').mean().reset_index()
+    df4 = aux[['price_m2', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    m2 = pd.merge(df1, df3, on='zipcode', how='inner')
+    df = pd.merge(m2, df4, on='zipcode', how='inner')
+elif ('price' not in aux.columns) & ('sqft_living' in aux.columns) & ('price_m2' not in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df3 = aux[['sqft_living', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    df = pd.merge(df1, df3, on='zipcode', how='inner')
+elif ('price' not in aux.columns) & ('sqft_living' not in aux.columns) & ('price_m2' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df4 = aux[['price_m2', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    df = pd.merge(df1, df4, on='zipcode', how='inner')
+
+elif ('sqft_living' not in aux.columns) & ('price' in aux.columns) & ('price_m2' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df3 = aux[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+    df4 = aux[['price_m2', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    m2 = pd.merge(df1, df3, on='zipcode', how='inner')
+    df = pd.merge(m2, df4, on='zipcode', how='inner')
+if ('sqft_living' not in aux.columns) & ('price' in aux.columns) & ('price_m2' not in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df3 = aux[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    df = pd.merge(df1, df3, on='zipcode', how='inner')
+elif ('sqft_living' not in aux.columns) & ('price' not in aux.columns) & ('price_m2' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df4 = aux[['price_m2', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    df = pd.merge(df1, df4, on='zipcode', how='inner')
+
+elif ('price_m2' not in aux.columns) & ('price' in aux.columns) & ('sqft_living' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df3 = aux[['sqft_living', 'zipcode']].groupby('zipcode').mean().reset_index()
+    df4 = aux[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    m2 = pd.merge(df1, df3, on='zipcode', how='inner')
+    df = pd.merge(m2, df4, on='zipcode', how='inner')
+elif ('price_m2' not in aux.columns) & ('price' not in aux.columns) & ('sqft_living' in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df3 = aux[['sqft_living', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    df = pd.merge(df1, df3, on='zipcode', how='inner')
+elif ('price_m2' not in aux.columns) & ('price' in aux.columns) & ('sqft_living' not in aux.columns):
+    df1 = aux[['id', 'zipcode']].groupby('zipcode').count().reset_index()
+    df4 = aux[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+    # juntar tudo em uma tabela unica
+    df = pd.merge(df1, df4, on='zipcode', how='inner')
+
+else:
+    st.write( 'Select more filters' )
 
 c1.header( 'Average values' )
 c1.dataframe( df, height=600 ) #mostrando na primeira coluna
 
 # DESCRIPTIVE STATISTICS
-num_attributes = data.select_dtypes( include=['int64', 'float64'])
+num_attributes = df.select_dtypes( include=['int64', 'float64'])
 media = pd.DataFrame( num_attributes.apply( np.mean ) )
 mediana = pd.DataFrame( num_attributes.apply( np.median) )
 std = pd.DataFrame( num_attributes.apply( np.std ) )
@@ -97,21 +158,15 @@ std = pd.DataFrame( num_attributes.apply( np.std ) )
 max_ = pd.DataFrame( num_attributes.apply( np.max ) )
 min_ = pd.DataFrame( num_attributes.apply( np.min ) )
 
-df1 = pd.concat([max_, min_, media, mediana, std], axis=1 ).reset_index()
-df1.columns = ['attributes', 'max', 'min', 'mean', 'median', 'std']
+df5 = pd.concat([max_, min_, media, mediana, std], axis=1 ).reset_index()
+df5.columns = ['attributes', 'max', 'min', 'mean', 'median', 'std']
 
 c2.header('Descriptive statistics')
-c2.dataframe( df1, height=600 ) #mostrando na segunda coluna
+c2.dataframe( df5, height=600 ) #mostrando na segunda coluna
 
-# add filters in dashboard
-#st.write( f_attributes )
-#st.write( f_zipcode )
-#st.write( df.head() )
-
-
-# -----------------------------
+# -----------------------------------------------------------------------------------------
 # REGION OVERVIEW
-# -----------------------------
+# -----------------------------------------------------------------------------------------
 
 # ---------PORTFOLIO DENSITY MAP
 # mapa em que o CEO consiga ver a quantidade de móveis por região
@@ -121,23 +176,28 @@ st.title( 'Region Overview' )
 c1, c2 = st.columns( ( 1, 1), gap="large")
 c1.header( 'Portfolio Density' )
 
-df = data.sample(10000)
+# attributes + zipcode = selecionar colunas e linhas
+if ( f_zipcode != [] ):
+    aux2 = data.loc[ data['zipcode'].isin( f_zipcode)]
+else:
+    aux2 = data.sample(10000, replace=True)
 
 #Base Map - Folium
-density_map = folium.Map( location=[data['lat'].mean(), data['long'].mean() ],
+
+density_map = folium.Map( location=[aux2['lat'].mean(), aux2['long'].mean() ],
                                     default_zoom_start=15)
 
 marker_cluster = MarkerCluster().add_to( density_map ) # com essa biblioteca conseguimos adicionar marcadores
 
-for name, row in df.iterrows():
+for name, row in aux2.iterrows():
     folium.Marker( [ row['lat'], row['long'] ],
                 popup='Sold by R${0} on: {1} Features: {2} sqf, {3} bedroooms, {4} bathrooms, year built: {5}'.format(
-                    row['price'],
-                    row['date'],
-                    row['sqft_living'],
-                    row['bedrooms'],
-                    row['bathrooms'],
-                    row['yr_built']
+                    row['price'] if 'price' in data.columns else 'none',
+                    row['date'] if 'date' in data.columns else 'none',
+                    row['sqft_living'] if 'sqft_living' in data.columns else 'none',
+                    row['bedrooms'] if 'bedrooms' in data.columns else 'none',
+                    row['bathrooms'] if 'bathrooms' in data.columns else 'none',
+                    row['yr_built'] if 'yr_built' in data.columns else 'none'
                     ) ).add_to( marker_cluster )
 with c1:
     folium_static( density_map, width=500, height=500 )
@@ -146,12 +206,18 @@ with c1:
 # ---------PRICE DENSITY MAP
 c2.header( 'Price Density' )
 
-df = data[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
-df.columns = ['ZIP', 'PRICE']
+# attributes + zipcode = selecionar colunas e linhas
+if ( f_zipcode != [] ):
+    aux3 = data.loc[ data['zipcode'].isin( f_zipcode)]
+else:
+    aux3 = data.sample(10000, replace=True)
+
+df7 = aux3[['price', 'zipcode']].groupby('zipcode').mean().reset_index()
+df7.columns = ['ZIP', 'PRICE']
 
 #df = data.sample(1000)
 
-geofile = geofile[geofile['ZIP'].isin( df['ZIP'].tolist() )]
+geofile = geofile[geofile['ZIP'].isin( df7['ZIP'].tolist() )]
 
 region_price_map = folium.Map( location=[data['lat'].mean(),
                                     data['long'].mean() ],
@@ -159,7 +225,7 @@ region_price_map = folium.Map( location=[data['lat'].mean(),
 
 # Para criar as regiões - cloropleth
 
-region_price_map.choropleth( data=df,
+region_price_map.choropleth( data=df7,
                              geo_data = geofile,
                              columns=['ZIP', 'PRICE'],
                              key_on='feature.properties.ZIP',
